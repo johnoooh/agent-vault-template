@@ -21,6 +21,8 @@ Concretely, I wanted one place where:
 
 Obsidian gives wiki-links (`[[note]]`) and a graph view. Git gives sync, history, and a pre-commit hook for security. That's the whole stack.
 
+No Obsidian Sync — git is doing that job. The paid Sync service is the official path, but git buys you full version history, a pre-commit hook that can scan for secrets before anything leaves your machine, and identical access for every agent and device that already speaks git. No subscription, no separate auth surface.
+
 ### Where this works (and where it doesn't)
 
 This pattern is **built for terminal agents that run in a working directory and have file-system access** — Claude Code is the primary target, and Codex CLI works the same way. Both can `git pull` the vault at session start, read project READMEs, write session notes, and push back. The protocol drops in cleanly:

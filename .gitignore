@@ -1,0 +1,18 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Obsidian (keep config, drop ephemeral state)
+.obsidian/workspace*
+.obsidian/cache
+.obsidian/plugins/*/data.json
+
+# Editors
+.idea/
+.vscode/
+*.swp
+
+# Agent-local
+.claude/settings.local.json
+CLAUDE.local.md
+AGENTS.local.md

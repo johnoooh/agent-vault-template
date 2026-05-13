@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+# Pre-commit guard for the agent vault.
+# Blocks:
+#   1. .DS_Store files
+#   2. Sensitive ID patterns in staged content or filenames
+#
+# Default patterns are clinical sample-ID formats (P-XXXXXXX, C-XXXXXX, s_C_XXXXXX)
+# common in biomedical / oncology workflows. Customize SENSITIVE_PATTERN below
+# for whatever ID shapes your data uses (AWS keys, internal account IDs, etc.).
+#
+# Bypass (only if you are SURE): git commit --no-verify
+
+set -u
+
+RED=$'\033[0;31m'
+YEL=$'\033[0;33m'
+NC=$'\033[0m'
+
+# ---- CUSTOMIZE THIS ----
+# Patterns (placeholders shown with X so this comment block doesn't trip the regex):
+#   P-<7 digits>      e.g. P-XXXXXXX
+#   C-<6 digits>      e.g. C-XXXXXX
+#   s_C_<6 digits>    e.g. s_C_XXXXXX
+SENSITIVE_PATTERN='\bP-[0-9]{7}\b|\bC-[0-9]{6}\b|\bs_C_[0-9]{6}\b'
+# ------------------------
+
+fail=0
+staged=$(git diff --cached --name-only --diff-filter=ACM)
+
+# --- 1. Block .DS_Store ---
+ds=$(printf '%s\n' "$staged" | grep -E '(^|/)\.DS_Store$' || true)
+if [ -n "$ds" ]; then
+  echo "${RED}pre-commit: refusing to commit .DS_Store files:${NC}"
+  printf '  %s\n' $ds
+  echo "${YEL}Fix: git rm --cached <file> ; ensure .gitignore covers it.${NC}"
+  fail=1
+fi
+
+# --- 2. Scan staged content for sensitive ID patterns ---
+while IFS= read -r file; do
+  [ -z "$file" ] && continue
+  if ! git diff --cached --no-color -- "$file" | grep -qE '^\+' ; then
+    continue
+  fi
+  hits=$(git diff --cached --no-color -- "$file" \
+         | grep -E '^\+' | grep -vE '^\+\+\+' \
+         | grep -nE "$SENSITIVE_PATTERN" || true)
+  if [ -n "$hits" ]; then
+    echo "${RED}pre-commit: sensitive ID pattern in staged change to:${NC} $file"
+    printf '%s\n' "$hits" | sed 's/^/  /'
+    fail=1
+  fi
+done <<< "$staged"
+
+# --- 3. Also block filenames containing such IDs ---
+bad_names=$(printf '%s\n' "$staged" | grep -E "$SENSITIVE_PATTERN" || true)
+if [ -n "$bad_names" ]; then
+  echo "${RED}pre-commit: filename contains sensitive ID pattern:${NC}"
+  printf '  %s\n' $bad_names
+  fail=1
+fi
+
+if [ "$fail" -ne 0 ]; then
+  echo ""
+  echo "${YEL}Commit blocked. To bypass (NOT RECOMMENDED): git commit --no-verify${NC}"
+  exit 1
+fi
+
+exit 0

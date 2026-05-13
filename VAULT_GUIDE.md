@@ -256,26 +256,24 @@ The cost is ~30 lines of shell modeled on the literature hook. Worth it if you h
 
 ### Future direction — meeting transcripts
 
-If your org already has meeting transcription available (Microsoft Teams, Zoom, Google Meet built-in), that's usually the easiest source — you're paying the privacy/compliance cost already and the output drops straight into the vault. Check whether a teammate has already built a summarizer before reinventing one.
+Some people on the team already have Teams transcriptions available — that's the easiest source. Vignesh has built a transcription summarizer and is the right person to talk to before reinventing it; check with him on what's already working for him.
 
-Other options people use elsewhere: Otter, Granola, Fireflies, Whisper locally.
-
-The natural extension of the inbox pattern: drop the transcript (or a summarizer's output) into `Notes/meetings/inbox/` instead of (or alongside) the hand-written note, and let the hook extract decisions, action items, and open questions from the full text rather than just your summary.
+The natural extension of the inbox pattern: drop the transcript (or Vignesh's summarizer output) into `Notes/meetings/inbox/` instead of (or alongside) the hand-written note, and let the hook extract decisions, action items, and open questions from the full text rather than just your summary.
 
 Things to think about if you go this direction:
 
-- **Sensitive data.** A transcript captures everything said. If meetings touch regulated data (PHI, PII, anything under NDA), the transcript inherits those constraints — needs to live behind the same guardrails as the rest of that data, and probably never in a third-party cloud transcription service. Local Whisper + local LLM extraction is the safer pattern.
+- **PHI / clinical data.** A transcript captures everything said. If meetings touch patient data, the transcript is now PHI — needs to live behind the same guardrails as the rest of your clinical data, and probably never in a cloud transcription service. Local Whisper + local LLM extraction is the safer pattern.
 - **Signal-to-noise.** Raw transcripts are mostly noise; the extraction prompt matters more than the transcription quality. "Pull out decisions made, action items assigned, and open questions" is a reasonable starting prompt; iterate based on what comes back useful vs. what's filler.
 - **What ends up in the vault.** The vault should get the extracted structured output, not the full transcript. Transcripts are large, mostly worthless after a week, and risky to commit. Store them outside the vault (or in a gitignored path) and only commit the distilled decisions/actions.
 - **The diff layer.** Action items belong somewhere actionable — `Tasks/` if you use it, or a project README's "Open Questions / Next Steps" section. Decisions belong in the project README Decisions section. Don't pile everything into one note.
 
-If you prototype this, the inbox hook is the natural drop-in point and the output format should match what manual extraction produces today.
+I haven't built this yet — if someone on the team prototypes it, the inbox hook is the natural drop-in point and the output format should match what manual extraction produces today.  I think a local model would be able to do a l
 
 ---
 
 ## 7. Security — the pre-commit hook
 
-If your data is sensitive (clinical, PII, NDA-bound, etc.), the vault needs hard guardrails — relying on yourself to remember not to commit IDs doesn't scale. `.githooks/pre-commit` blocks:
+I work with clinical-adjacent data, so the vault has hard guardrails. `.githooks/pre-commit` blocks:
 
 1. **`.DS_Store`** from being committed at all.
 2. **Sensitive ID patterns** in staged content or filenames:

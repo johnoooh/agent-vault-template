@@ -32,7 +32,7 @@ Three principles the whole pattern rests on:
 
 **Discipline in skills, not in your head.** Brainstorming, planning, TDD, code review — they're skills the agent invokes consistently. You stop having to remember to do them. The skills enforce the gates: brainstorming enforces "no implementation until design approved." TDD enforces "tests before code." You don't rely on the agent's initiative or your own memory.
 
-**Rules in CLAUDE.md and hooks, not in vibes.** The global `~/.claude/CLAUDE.md` is the durable enforcement layer: identity, environment defaults (package manager strategy, HPC partition if you have one), hard security rules ("NEVER commit secrets or sensitive identifiers"), new-project scaffolding standards, and the vault protocol. Hooks (see §12) backstop the agent when it would otherwise violate a rule. Rules in CLAUDE.md survive model updates, session resets, and teammates using a different machine.
+**Rules in CLAUDE.md and hooks, not in vibes.** The global `~/.claude/CLAUDE.md` is the durable enforcement layer: identity, environment defaults (uv/mamba/conda strategy, HPC partition), hard security rules ("NEVER commit secrets or patient IDs"), new-project scaffolding standards, and the vault protocol. Hooks (see §12) backstop the agent when it would otherwise violate a rule. Rules in CLAUDE.md survive model updates, session resets, and teammates using a different machine.
 
 A practical corollary: **inline durable content into `~/.claude/CLAUDE.md` rather than telling the agent to read a file at session start.** The global block sits in the cached system prompt and costs nothing per session. A "read `AGENTS.md` first" instruction pays the read cost every time. Reserve external files for material that's genuinely needed only occasionally — the canonical version can live elsewhere, but the day-to-day content belongs inline.
 
@@ -229,7 +229,7 @@ Update the project README if status changed. Update `Work/context.md` if the pro
 **Step 2: Commit and push the vault.**
 
 ```bash
-git -C ~/Documents/Github/<your_vault> add -A \
+git -C ~/Documents/Github/sevry_vault add -A \
   && git commit -m "claude-code: <project> session summary YYYY-MM-DD" \
   && git push
 ```
@@ -381,7 +381,7 @@ Configured in `~/.claude/settings.json` (global, applies everywhere) or `.claude
 
 ### My production hooks — copy these as starting points
 
-- **`PreToolUse / Read|Edit|Write` → `block-secrets.py`** — scans file paths and content for sensitive ID patterns (whatever format your data uses). Blocks the read/edit if it matches. The agent literally cannot open a file containing a flagged ID.
+- **`PreToolUse / Read|Edit|Write` → `block-secrets.py`** — scans file paths and content for sensitive ID patterns (`P-XXXXXXX`, `C-XXXXXX`, etc.). Blocks the read/edit if it matches. The agent literally cannot open a file containing a patient ID.
 - **`PreToolUse / Bash` → `block-dangerous-commands.sh`** — blocks `rm -rf`, force-pushing to main, and similar. Opt-in override required.
 - **`PostToolUse / Edit|Write` → `after-edit.sh`** — runs formatter/linter on the modified file immediately after the edit.
 - **`Stop` → `end-of-turn.sh`** — end-of-turn housekeeping: log rotation, status checks, whatever the project needs.
@@ -416,7 +416,7 @@ When the same friction shows up twice in a week, that's a hook. `/hookify` lower
 
 **Bake the protocol into global CLAUDE.md.** Per-project enforcement is fragile and easy to forget. Global means every session everywhere inherits the discipline. One edit to `~/.claude/CLAUDE.md` propagates to every project, every machine, every session.
 
-**Hooks enforce what CLAUDE.md only requests.** If something in CLAUDE.md is genuinely non-negotiable — don't commit sensitive IDs, don't force-push to main — write a hook. The agent respects `~/.claude/CLAUDE.md` most of the time; the harness enforces a hook every time.
+**Hooks enforce what CLAUDE.md only requests.** If something in CLAUDE.md is genuinely non-negotiable — don't commit patient IDs, don't force-push to main — write a hook. The agent respects `~/.claude/CLAUDE.md` most of the time; the harness enforces a hook every time.
 
 **Tell the agent not to leave the folder.** If it needs a file, a package, a credential, or anything else outside the working directory, it should ask. Roaming agents pick up unrelated files, run unrelated commands, and pollute the working context. The rule "stay put and ask" pairs naturally with `uv` for Python work — all dependencies live in `.venv/` inside the project folder, so there's nothing the agent legitimately needs from elsewhere on the filesystem. Same logic for `mamba` environments and per-project `.env` files. When the agent does need to step outside, the question itself is useful information: it forces you to notice the cross-folder dependency before it becomes invisible.
 

@@ -258,7 +258,7 @@ The cost is ~30 lines of shell modeled on the literature hook. Worth it if you h
 
 Some people on the team already have Teams transcriptions available — that's the easiest source. Vignesh has built a transcription summarizer and is the right person to talk to before reinventing it; check with him on what's already working for him.
 
-The natural extension of the inbox pattern: drop the transcript (or Vignesh's summarizer output) into `Notes/meetings/inbox/` instead of (or alongside) the hand-written note, and let the hook extract decisions, action items, and open questions from the full text rather than just your summary.
+The natural extension of the inbox pattern: drop the transcript (or some kind of summarizer output) into `Notes/meetings/inbox/` instead of (or alongside) the hand-written note, and let the hook extract decisions, action items, and open questions from the full text rather than just your summary.
 
 Things to think about if you go this direction:
 

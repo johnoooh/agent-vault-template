@@ -190,19 +190,15 @@ Extended thinking is a separate lever from model choice. Anthropic's effort-leve
 
 **How to set it in Claude Code:**
 
-- **Keyword triggers in the prompt** — cheapest way to dial up for a single turn. Approximate budgets:
-  - `think` — ~4K tokens (routine debugging, small refactors)
-  - `think hard` — ~10K tokens (API design, planning, optimization)
-  - `think harder` — between the two above
-  - `ultrathink` — ~32K tokens (architecture, complex migrations, critical debugging)
-- **`/effort <level>`** — slash command that sets thinking effort for the current session. Levels pair directly with the chart labels: `low / medium / high / xhigh / max`. Granular session-level control without per-turn keywords. Resets on `/clear`.
+- **`/effort <level>`** — the documented lever. Slash command that sets thinking effort for the current session. Levels pair directly with the chart labels: `low / medium / high / xhigh / max`. Granular session-level control, persists until `/clear`. This is the canonical mechanism — reach for it first.
+- **`ultrathink` keyword in the prompt** — the one prompt keyword Anthropic actually recognizes. Include `ultrathink` anywhere in a turn's prompt to request deeper reasoning for that turn. Cheap per-turn dial-up without changing the session-level effort. Note: `think` / `think hard` / `think harder` are *not* recognized keywords — they pass through as ordinary prompt text. Older community writeups list token budgets for them; treat those as folklore, not current behavior.
 - **Env var `MAX_THINKING_TOKENS`** — hard ceiling, applies everywhere. Useful when you want to cap a long-running orchestrator that might otherwise go expensive on routine turns. Persistent across sessions.
 - **Env var `CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING=1`** — forces a fixed reasoning budget instead of letting the model decide per turn. Use when you want predictable cost regardless of perceived task difficulty.
 - **Default** — thinking is off / low unless explicitly invoked. Most turns don't need it.
 
 **When to crank it up:**
-- Brainstorming a new design — `ultrathink` or `think harder` on the framing question.
-- Debugging when the bug has no obvious cause — `think hard` before proposing a fix.
+- Brainstorming a new design — `ultrathink` on the framing turn, or bump `/effort` to `high`/`xhigh` for the session.
+- Debugging when the bug has no obvious cause — raise `/effort` before proposing a fix.
 - Architectural decisions with real trade-offs — give it room to work through them.
 
 **When to leave it low:**
@@ -272,7 +268,7 @@ Most community advice says use `/compact` proactively at around 60% capacity wit
 
 **The compounding failure mode in practice.** The worst version isn't a single bad summary — it's ten sessions of `/compact` where each summary drifts slightly from the previous, and by session twelve the model's working assumptions about the project are wrong in ways that are hard to trace. The session note + vault loop avoids this entirely because the vault is the source of truth, not the conversation history. Also, the vault can easily be audited by me for mistakes. Misremembers in conversation don't persist past a `/clear`.
 
-**The 1M-token trap — never get into this position.** Opus 4.7 has a 1M-token context window. Autocompact fires around 960k. The catch: by the time you're anywhere near that ceiling, the model is already performing worse — context rot from sheer token volume degrades reasoning well before autocompact triggers. When the autocompact then runs, *both the live reasoning and the summary it produces are operating on a degraded baseline*. You get a worse compact than you would have earlier, and the post-compact session inherits that worse baseline. The lesson isn't "compact earlier" — it's never let context grow that far in the first place. Finish the task, write to the vault, `/clear`. Bounded sessions are an architectural answer to a problem `/compact` can't actually solve.
+**The 1M-token trap — never get into this position.** Opus 4.7 has a 1M-token context window. Autocompact fires as you approach the limit — `/context` shows the reserved buffer directly (free space tops out around 960k, not 1M). The catch: by the time you're anywhere near that ceiling, the model is already performing worse — context rot from sheer token volume degrades reasoning well before autocompact triggers. When the autocompact then runs, *both the live reasoning and the summary it produces are operating on a degraded baseline*. You get a worse compact than you would have earlier, and the post-compact session inherits that worse baseline. The lesson isn't "compact earlier" — it's never let context grow that far in the first place. Finish the task, write to the vault, `/clear`. Bounded sessions are an architectural answer to a problem `/compact` can't actually solve.
 
 **TL;DR on the mechanics:** the first-order harm is in-session — the lossy summary replaces the real history and the agent operates on it for every following turn. The second-order harm leaks across sessions when the agent, operating on that corrupted summary, then writes session notes, updates the project README, or modifies CLAUDE.md. The persistent memory layer gets contaminated indirectly, through the agent's outputs. That's what makes it hard to audit: the artifact you'd inspect later looks fine on its face. The error lives in the gap between what actually happened and what the summary kept. Session notes you review before commit don't have this property — the review is the quality gate. A compact summary happens inline, invisibly.
 

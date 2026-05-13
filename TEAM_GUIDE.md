@@ -20,7 +20,7 @@ Five steps, repeating:
 
 **Model picker:** Opus/opusplan = think and design. Sonnet = execute. Haiku = parallel cheap work. See §7.
 
-**Thinking:** `think` through `ultrathink` — dial up for design decisions and gnarly debugging, off by default. See §7.5.
+**Thinking:** `think` through `ultrathink` — dial up for design decisions and gnarly debugging, off by default. Honestly I dont use ultrathink a lot, but it can be good for tough problems. See §7.5.
 
 ---
 
@@ -152,8 +152,6 @@ The agent's self-review and the code-review skill are necessary but not sufficie
 - **`git diff`** and **`git diff --staged`** — base case, always start here. Run `git diff --stat` first for a bird's-eye view of what changed where, then dive into the full diff for the parts that matter.
 - **`git diff HEAD~N HEAD`** — review a session's worth of work in one go before pushing. Useful when the agent committed in small steps and you want to see the cumulative effect.
 - **`git show <sha>`** — review a single commit (message + diff together). Good for "what did this specific change do" lookups, especially when reading `git log` and you want to drill into one entry.
-- **`delta`** — pretty pager for git. Side-by-side mode, syntax highlighting, much easier on the eyes than the default. One-time setup in `~/.gitconfig`, pays off every diff after.
-- **`difft` (difftastic)** — syntax-aware diff. Renders renames, large refactors, and structural changes in a way that line-based diff can't. Worth reaching for when the default diff is confusing.
 - **GitHub web UI** (`gh pr view --web` or `gh pr diff`) — for PR-style review with threaded comments. Even on solo work, opening a PR for non-trivial changes and reviewing in the web UI before merging is worth the friction.
 - **IDE diff panel** — VS Code's git view, JetBrains' diff viewer. Best for big refactors where you want to scroll through changes file by file with the full editor context.
 
@@ -212,7 +210,7 @@ Extended thinking is a separate lever from model choice. Anthropic's effort-leve
 - Anything where the answer space is small.
 - Subagents doing bounded execution — let them burn through cheaply.
 
-**Practical rule:** if I'd want a human teammate to sit quietly and think for a few minutes before answering, I dial thinking up. Otherwise low/off is correct. The diminishing-returns curve means cranking everything to max is the wrong default — most tasks don't move past the medium plateau, and you pay for every token past that point.
+**Practical rule:** if I'd want a human teammate to sit quietly and think for a few minutes before answering, I dial thinking up. Otherwise low/off is fine. The diminishing-returns curve means cranking everything to max is the wrong default — most tasks don't move past the medium plateau, and you pay for every token past that point.
 
 ---
 
@@ -290,7 +288,7 @@ Three durable memory layers with different audiences and access patterns. They c
 
 **claude-mem** = the model's notebook. Automatic, observation-indexed, semantically searchable. I rarely read it directly; the model fetches what it needs by ID or search query. Best for: *"have we hit this bug before / what did we rule out / what was surprising."* It captures the operational details that don't fit cleanly into a session note but might matter three weeks later.
 
-**Git** = code memory. Diffs and commit messages, both human- and agent-readable. Claude Code writes good commits when asked — small scope, the "why" in the body, conventional prefixes — which makes `git log` a scannable history of *why the code looks the way it does*. Best for: *"when did this change / what was the intent / show me the diff between then and now."* `git log -p`, `git blame`, and `git show <sha>` are first-class lookups.
+**Git** = code memory. Diffs and commit messages, both human- and agent-readable. Claude Code writes good commits when asked — small scope, the "why" in the body, conventional prefixes — which makes `git log` a scannable history of *why the code looks the way it does*. Best for: *"when did this change / what was the intent / show me the diff between then and now."* `git log -p`, `git blame`, and `git show <sha>` are first-class lookups.  This is viewable by both me and the agent.  Theres never been a better time to start using git! 
 
 The three layers don't overlap as much as it looks: the vault captures decisions I want to *remember*, claude-mem captures decisions the *model* needs to remember, and git captures the *literal change*. A good commit message links them — it explains the why while the diff shows the what. For the deeper vault-vs-claude-mem comparison (audience, format, lookup cost), see [`VAULT_GUIDE.md`](./VAULT_GUIDE.md) §4.
 
@@ -306,7 +304,7 @@ git log --oneline
 
 A log like that tells you *why the code looks the way it does*. A log full of "wip" and "fix stuff" is opaque to the agent at the next session start and to you after three weeks away.
 
-The vault requires 5–10 minutes per session to write the note and push. claude-mem is automatic. Good commit messages cost 30 seconds. The cost of *not* maintaining them is paid later, usually at the start of the next session when you're trying to re-orient.
+The vault requires ~2-5 minutes per session to write the note and push. claude-mem is automatic. Good commit messages cost 30 seconds. The cost of *not* maintaining them is paid later, usually at the start of the next session when you're trying to re-orient.
 
 For vault setup, file layout, automation scripts, and security hooks, see [`VAULT_GUIDE.md`](./VAULT_GUIDE.md).
 
@@ -320,7 +318,7 @@ Quality-of-life things that compound once you know them:
 
 ```text
 ! gh pr view 42
-! gcloud auth list
+! rm tmp.txt
 ! pwd
 ```
 
@@ -333,6 +331,8 @@ Quality-of-life things that compound once you know them:
 **`/clear`.** Covered in §8 and §9. The most important command in this list. Use it every time a task ends, not just when you hit the context limit.
 
 **`/skills`.** Lists all available skills in the current session — useful when you know you want a superpowers skill but can't remember the exact name. Each skill listed is invocable directly by name. If you see a skill mentioned in this guide (`superpowers:brainstorming`, etc.), this is how you find and verify it's loaded.
+
+There are many more out there!  These are just a few that I use often! 
 
 These are shortcuts, not framework. Worth knowing early because they compound across every session. The ones that matter most in order of daily use: `!` for inline shell, `/context` before clearing, `/clear` after finishing.
 
@@ -349,7 +349,7 @@ What I actually run with:
 **Skills:**
 - `superpowers:*` — the pipeline that powers §1–§8: `brainstorming`, `writing-plans`, `executing-plans`, `subagent-driven-development`, `dispatching-parallel-agents`, `test-driven-development`, `requesting-code-review` / `receiving-code-review`, `using-git-worktrees`. If I had to keep one skill set, this is it. Source: [obra/superpowers-marketplace](https://github.com/obra/superpowers-marketplace) (skills themselves at [obra/superpowers](https://github.com/obra/superpowers)).
 - `claude-mem:*` — memory plugin. `mem-search` for "have we hit this before" (drives the `search → timeline → get_observations` workflow); `smart-explore` for token-efficient code-structure lookups via tree-sitter (separate from memory); `make-plan` / `do` as a third planning option (§5). Source: [thedotmack/claude-mem](https://github.com/thedotmack/claude-mem).
-- `hookify` — turns "this friction annoyed me twice" into a working hook in one command (§12).
+- `hookify` — turns "this friction annoyed me twice" into a working hook in one command (§12). Just tell claude "Use hookify to make a hook that does {thing} when a tool call finishes"
 - `code-review` — focused code-review plugin, complements the superpowers code-review skill.
 - `commit-messages`, `security-audit` — built-in, used at commit time and during reviews.
 
@@ -358,6 +358,7 @@ What I actually run with:
 - `pubmed` — paper fetching for the `Literature/inbox/` automation in the vault. Drop a PMID into the inbox folder and it fetches the paper, fills the template, writes the note. See `VAULT_GUIDE.md` §6.
 - `context7` — library/framework docs lookup. Better than web search when you know the library name and need accurate, current API references — especially for fast-moving libs where the model's training data is stale.
 - Anthropic-provided MCPs (Gmail, Calendar, Drive) — auth-gated, used for ad-hoc external lookups when relevant.
+- There are many bioinformatics focused MCPs out there.  If you have a tool/api/database you usually use there might already be one.  Ask your agent to search for one for you.  If theres not one, you can just make it! 
 
 **Practical rule:** install a skill or MCP when the same friction shows up twice. The first time is signal; the second is the trigger. Most of the skills above were installed exactly that way.
 
@@ -365,7 +366,7 @@ What I actually run with:
 
 ## §12. Hooks and hookify — automating the rules
 
-Hooks are Claude Code's lifecycle callbacks: shell commands the harness runs at specific events. They're how you enforce a rule deterministically instead of trusting the agent to follow it. **The harness runs hooks — not the agent — so a hook that blocks something cannot be argued around or accidentally bypassed.**
+Hooks are Claude Code's lifecycle callbacks: shell commands the harness runs at specific events. They're how you enforce a rule deterministically instead of trusting the agent to follow it. **The harness runs hooks — not the agent — so a hook that blocks something cannot be argued around or accidentally bypassed.** For example, my claude cant open a file that has a patient ID in it.  It also cant do rm -rf because I blocked it using hooks.
 
 ### Event types
 

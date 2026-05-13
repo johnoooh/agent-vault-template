@@ -267,7 +267,7 @@ Things to think about if you go this direction:
 - **What ends up in the vault.** The vault should get the extracted structured output, not the full transcript. Transcripts are large, mostly worthless after a week, and risky to commit. Store them outside the vault (or in a gitignored path) and only commit the distilled decisions/actions.
 - **The diff layer.** Action items belong somewhere actionable — `Tasks/` if you use it, or a project README's "Open Questions / Next Steps" section. Decisions belong in the project README Decisions section. Don't pile everything into one note.
 
-I haven't built this yet — if someone on the team prototypes it, the inbox hook is the natural drop-in point and the output format should match what manual extraction produces today.  I think a local model would be able to do a l
+I haven't built this yet — if someone on the team prototypes it, the inbox hook is the natural drop-in point and the output format should match what manual extraction produces today.  I think a local model would be able to do a lot of this depending on the length of the meeting.  Local model's context is often small, so longer meetings could fill it up. 
 
 ---
 
@@ -327,7 +327,7 @@ Between the two, I never hand-maintain either the daily briefing or the structur
 - **Wiki-links are free; use them aggressively.** `[[Work/ClaudeCode/<project>/README]]` from a literature note costs nothing and pays off every time you traverse the graph.
 - **The pre-commit hook is worth more than it looks.** A one-shot investment that turns "did I just leak an ID?" from a recurring fear into a non-issue.
 - **Bake the protocol into global `CLAUDE.md`, not into each project.** Then every Claude Code session everywhere reads the vault the same way. New projects inherit the discipline for free.
-- **Let Claude Code own the writes.** The whole reason it works is that Claude Code is the one keeping state fresh. If you start hand-editing READMEs out from under it, you'll diverge.
+- **Let Claude Code own the writes.** The whole reason it works is that Claude Code is the one keeping state fresh. If you start hand-editing READMEs out from under it, you'll diverge. 
 
 ---
 
